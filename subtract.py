@@ -8,7 +8,7 @@ def main():
         return
     result = values[0]
     for value in values[1:]:
-        result += value
+        result -= value
     print(result)
 
 
