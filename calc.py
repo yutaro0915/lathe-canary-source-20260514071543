@@ -3,9 +3,9 @@ import sys
 
 def main():
     values = [int(part) for part in sys.stdin.read().split()]
-    result = 0
+    result = 1
     for value in values:
-        result += value
+        result *= value
     print(result)
 
 
