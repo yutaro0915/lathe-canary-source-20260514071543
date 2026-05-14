@@ -1,0 +1,47 @@
+{
+  "env": {
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
+  },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "hooks/log.sh SessionStart" }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "hooks/log.sh UserPromptSubmit" }] }
+    ],
+    "PreToolUse": [
+      { "hooks": [{ "type": "command", "command": "hooks/log.sh PreToolUse" }] }
+    ],
+    "PostToolUse": [
+      { "hooks": [{ "type": "command", "command": "hooks/log.sh PostToolUse" }] }
+    ],
+    "SubagentStart": [
+      { "hooks": [{ "type": "command", "command": "hooks/log.sh SubagentStart" }] }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "hooks/log.sh SubagentStop" },
+          { "type": "command", "command": "hooks/copy_transcript.sh" }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          { "type": "command", "command": "hooks/log.sh PreCompact" },
+          { "type": "command", "command": "hooks/copy_transcript.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "hooks/log.sh Stop" },
+          { "type": "command", "command": "hooks/copy_transcript.sh" },
+          { "type": "command", "command": "hooks/commit-runs.sh" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": 2,
+  "control_branch": "lathe",
+  "worktree_root": "lathe-worktrees",
+  "harness": {
+    "task": ".lathe/harness/task",
+    "harness": ".lathe/harness/harness"
+  },
+  "transfer_filter": ".latheignore"
+}

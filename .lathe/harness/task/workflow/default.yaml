@@ -1,0 +1,205 @@
+name: default
+version: 1
+description: >
+  レベル1、どのプロジェクトでも使える最低限のワークフロー。
+  計画 → 契約 → 実装 → レビュー → 完了 の一直線。
+  レビュー結果次第で実装に戻る。
+
+adoption_criteria:
+  - タスクの粒度が単一の機能追加・バグ修正・小規模リファクタ程度
+  - 関係するファイルが少数（目安：10ファイル以下）
+  - 既存のテスト/ビルド基盤が機能している
+  - 仕様が比較的明確（曖昧点を計画段階で解消可能）
+not_for:
+  - 大規模な多段階実装（複数機能同時開発）
+  - リサーチを伴うタスク（phase 0 として spike が要る）
+  - 複数 reviewer の ensemble（cross-model review）
+  - E2E/QA を含むフルスタックタスク
+  - インフラ・デプロイを伴うタスク
+
+actors:
+  human:        依頼者・承認者
+  orchestrator: 計画・dispatch・統合（メインの Claude）
+  coder:        実装担当 subagent
+  reviewer:     レビュー担当 subagent
+
+phases:
+  - id: intake
+    order: 1
+    actor: orchestrator
+    input: human からの依頼文
+    output: 解釈メモ（計画書「1. タスク解釈」の下書き）
+    success: 依頼を自分の言葉で言い直せる、目的・スコープ・前提が抽出できている
+    failure:
+      condition: 依頼が曖昧で解釈できない
+      action: human に逆質問、次に進まない
+
+  - id: plan
+    order: 2
+    actor: orchestrator
+    input: 解釈メモ
+    output: .lathe/plans/<run_id>.html (status=draft)
+    procedure: planning skill に従う
+    success:
+      - 計画書の全セクションが埋まっている
+      - 構造図と実行フロー図が両方ある
+      - 受入条件が全て検証可能な形で書かれている
+      - リスク・未解決の質問が洗い出されている
+    failure:
+      condition: 未解決の質問が空にならない
+      action: phase 3 に進まず human に質問
+
+  - id: contract
+    order: 3
+    actor: [orchestrator, human]
+    input: 計画書 (draft)
+    output: 計画書 (approved)
+    procedure: |
+      1. 計画書 status を awaiting_approval に変更
+      2. human に提示（path を伝える）
+      3. human の応答により分岐：
+         - 承認: status=approved、承認日時・承認者を記録
+         - 修正要求: status=draft に戻し、修正履歴に記録、phase=plan に戻る
+         - 却下: タスク終了
+    success: status = approved
+    failure:
+      condition: 承認得られず
+      action: タスク終了 or 計画見直し
+
+  - id: implement
+    order: 4
+    actor: coder
+    input:
+      - 計画書HTMLのパス
+      - 実装スコープ（計画書 3.3 全体、または分割した一部）
+      - 関連受入条件
+    output: coder report
+    procedure: |
+      1. orchestrator は計画書 status を in_progress に変更
+      2. coder を Task tool で起動、最小限の context で dispatch
+      3. coder report を受領
+    success: coder report の status = success
+    failure:
+      - condition: status = partial
+        action: 不足分を特定、追加 dispatch（最大1回）
+      - condition: status = failed
+        action: phase=review に進まず escalate（implementation_failed）
+
+  - id: review
+    order: 5
+    actor: reviewer
+    input:
+      - 計画書HTMLのパス
+      - coder report
+      - 変更ファイル一覧
+    output: reviewer report
+    procedure: |
+      1. reviewer を Task tool で起動
+      2. reviewer report を受領
+    success: report が返ってくる（verdict は次 phase で判定）
+    failure:
+      condition: reviewer が検証不能（コマンド不明・環境不備）
+      action: orchestrator が補助情報を渡して再 dispatch、または human escalate
+
+  - id: decide
+    order: 6
+    actor: orchestrator
+    input: reviewer report
+    output: 次の遷移先
+    transitions:
+      - verdict: approve
+        next: close
+      - verdict: request_changes
+        next: iterate
+      - verdict: block
+        next: iterate
+        condition: blockが初回
+      - verdict: block
+        next: escalate
+        condition: blockが2回目以降
+        reason: review_block_persistent
+
+  - id: iterate
+    order: 7
+    actor: [orchestrator, coder]
+    input: reviewer findings
+    output: 修正された実装
+    procedure: |
+      1. findings を coder dispatch 用に整形（blocker/major のみ。minor/nit は次回機会へ）
+      2. coder を再起動、findings を渡す
+      3. 完了後 phase=review に戻る
+    success: 修正完了し review に戻れる
+    failure:
+      condition: iteration_count > limits.max_iterations
+      action: escalate (repeated_failure)
+
+  - id: close
+    order: 8
+    actor: orchestrator
+    input: approve された実装と reviewer report
+    output:
+      - 計画書 status を completed に更新
+      - human への完了報告
+    completion_report_includes:
+      - run_id
+      - 計画書HTMLへのリンク
+      - 変更ファイル一覧
+      - 受入条件の最終ステータス
+      - reviewer の positive_notes 抜粋
+      - 次回への申し送り（minor/nit で残したもの）
+
+flow:
+  start: intake
+  default_path: [intake, plan, contract, implement, review, decide, close]
+  back_edges:
+    - from: contract
+      to: plan
+      when: 修正要求
+    - from: decide
+      to: iterate
+      when: verdict in [request_changes, block]
+    - from: iterate
+      to: review
+      when: 修正完了
+
+limits:
+  max_iterations: 3                   # phase 4-7 のループ上限
+  partial_retry_max: 1                # phase 4 で partial の追加 dispatch 上限
+
+escalation:
+  triggers:
+    - phase: intake
+      condition: 解釈不能
+      reason: spec_unclear
+      payload: [依頼文, 自分の解釈の限界]
+    - phase: plan
+      condition: 未解決質問が空にならない
+      reason: spec_ambiguous
+      payload: [質問リスト, 選択肢]
+    - phase: implement
+      condition: coder status=failed
+      reason: implementation_failed
+      payload: [coder report 最終出力]
+    - phase: iterate
+      condition: iteration_count > max_iterations
+      reason: repeated_failure
+      payload: [全 reviewer report の差分, 試行履歴]
+    - phase: decide
+      condition: block が2回連続
+      reason: review_block_persistent
+      payload: [block findings, 実装履歴]
+    - phase: any
+      condition: 予算超過
+      reason: budget_exceeded
+      payload: [これまでの成果, 続行/打切判断]
+
+deviation_policy: |
+  任意の phase で計画書の内容を変更する必要が生じた場合：
+    1. phase を中断
+    2. 計画書 status を amended に変更
+    3. 修正履歴に「何を、なぜ変えるか」を記録
+    4. phase=contract に戻り再承認を得る
+    5. 承認後、中断していた phase から再開
+
+  逸脱しても計画書を更新しないのは契約違反。
+  orchestrator が最も避けるべき失敗。
