@@ -1,0 +1,7 @@
+# Paths that do not cross the user-owned branch / Lathe-managed branch boundary.
+.lathe/
+.claude/
+CLAUDE.md
+workflow/
+hooks/
+plan_template.html

@@ -1,0 +1,7 @@
+.claude/
+.lathe/
+.lathe/git-exclude
+CLAUDE.md
+hooks/
+plan_template.html
+workflow/

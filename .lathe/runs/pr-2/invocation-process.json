@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "invocation": {
+    "command": "lathe task process",
+    "intent": "execute_task"
+  },
+  "injected_dependencies": {
+    "plan_approval": {
+      "grant": "granted_by_invocation",
+      "approver": "lathe process invocation",
+      "meaning": "The overseer explicitly requested execution; do not stop solely for human plan approval if the selected workflow can consume this grant."
+    },
+    "existing_plan_candidates": {
+      "paths": [],
+      "meaning": "If non-empty, these plan artifacts already existed before this process invocation. Reuse/update the latest matching plan; do not create a second plan unless every candidate is stale or mismatched, in which case escalate instead of exporting."
+    },
+    "delivery": {
+      "adapter": "latheignore_filtered_export",
+      "command_template": "Lathe exports committed task changes across the .latheignore boundary; do not push this branch directly to source.head_branch."
+    }
+  },
+  "constraints": {
+    "workflow_selection": "harness_owned",
+    "human_escalation": "required_when_selected_workflow_cannot_safely_consume_injected_dependencies"
+  }
+}

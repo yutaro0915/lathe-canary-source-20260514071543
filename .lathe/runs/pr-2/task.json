@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "source": {
+    "type": "pr",
+    "id": "2",
+    "title": "subtract cli",
+    "url": "https://github.com/yutaro0915/lathe-canary-source-20260514071543/pull/2",
+    "base_branch": "main",
+    "head_branch": "feature/minus-source"
+  },
+  "worktree": {
+    "path": "/tmp/lathe-source-e2e-20260514071543/project/lathe-worktrees/task-pr-2",
+    "branch": "lathe-task/pr-2"
+  },
+  "transfer_filter": {
+    "file": ".latheignore",
+    "policy_source": "refs/lathe/pr-2/base:.latheignore",
+    "meaning": "Paths matched by .latheignore do not cross the user-owned branch / Lathe-managed branch boundary."
+  },
+  "artifacts": {
+    "brief": ".lathe/brief.md"
+  },
+  "run": {
+    "import_commit": "0ddb7a6c3dd8e0c9ca4b08112008c17d335e89c3",
+    "export_policy": "latheignore_filtered_patch"
+  }
+}

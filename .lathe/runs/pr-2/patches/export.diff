@@ -1,0 +1,13 @@
+diff --git a/subtract.py b/subtract.py
+index dac5755..a14ace5 100644
+--- a/subtract.py
++++ b/subtract.py
+@@ -8,7 +8,7 @@ def main():
+         return
+     result = values[0]
+     for value in values[1:]:
+-        result += value
++        result -= value
+     print(result)
+ 
+ 

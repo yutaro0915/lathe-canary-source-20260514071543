@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "archived_at": "20260514-074400",
+  "source": {
+    "type": "pr",
+    "id": "2",
+    "url": "https://github.com/yutaro0915/lathe-canary-source-20260514071543/pull/2",
+    "base_branch": "main",
+    "head_branch": "feature/minus-source"
+  },
+  "task": {
+    "mode": "process",
+    "branch": "lathe-task/pr-2",
+    "head": "837838fb681dd373cc260240eb95e8895c4982fc",
+    "import_commit": "0ddb7a6c3dd8e0c9ca4b08112008c17d335e89c3"
+  },
+  "artifacts": {
+    "task_json": "task.json",
+    "brief": "brief.md",
+    "invocation_latest": "invocation.latest.json",
+    "source_imported_dir": "source/imported/",
+    "source_final_dir": "source/final/",
+    "source_imported_files": "source/imported.files.txt",
+    "source_final_files": "source/final.files.txt",
+    "plans_dir": "plans/",
+    "sessions_dir": "sessions/",
+    "exported_files_dir": "exported-files/",
+    "exported_files_list": "exported-files.txt",
+    "task_branch_patch": "patches/task-branch.diff",
+    "export_patch": "patches/export.diff",
+    "export_name_status": "patches/export.name-status.txt",
+    "export_patch_status": "nonempty",
+    "task_log": "git/task-log.txt"
+  },
+  "source_snapshot": {
+    "imported_dir": "source/imported/",
+    "final_dir": "source/final/",
+    "imported_files": "source/imported.files.txt",
+    "final_files": "source/final.files.txt",
+    "imported_file_count": 6,
+    "final_file_count": 6,
+    "filter": ".latheignore plus Lathe runtime excludes"
+  },
+  "sessions": [
+    "b4d7e239-a695-4fd3-9547-ff67389f8d88"
+  ],
+  "plans": [
+    "20260514-074052-fix-subtract-cli.html"
+  ],
+  "exported_files": [
+    "subtract.py"
+  ],
+  "task_commits": [
+    "837838fb681dd373cc260240eb95e8895c4982fc lathe: process PR #2",
+    "6d4e39e69c077748cc6d127813ea7db610929160 runs: b4d7e239-a695-4fd3-9547-ff67389f8d88",
+    "64f2e65eacee05fc82815d0c9bd0f4706b407115 fix: subtract.py uses -= to subtract values from first integer",
+    "32330c3c72f58ac5c08ebb907004ae2a7032ac68 lathe: import PR #2",
+    "cfd038dcfd96ade3cc14936d5aefc82f5bb46729 lathe: init control branch"
+  ]
+}
